@@ -63,26 +63,11 @@
             <p class="tech">ESP32, Sensors, JSON, JavaScript</p>
             <div class="card-actions">
                 <!-- updated repo URL as requested -->
-                <button id="github-iot-btn" class="github-button" data-repo="https://github.com/Tigranoff/portfolio-air_quality_measurement.git">View on GitHub</button>
+                <button id="github-iot-btn" class="github-button" data-repo="https://github.com/Tigranoff/portfolio_air_quality_measurement.git">View on GitHub</button>
                 <a href="stats.html" class="github-button">View Statistics</a>
             </div>
 
-            <!-- Stats UI & charts (no URL input as requested) -->
-            <div class="stats-main" style="margin-top:16px;">
-                <section class="data-controls">
-                    <!-- URL input removed — site will auto-load local voc.json + data_without_voc.json -->
-                    <div id="status" class="status" aria-live="polite"></div>
-                </section>
-
-                <section class="charts-grid">
-                    <div class="chart-card"><h3>Temperature (°C)</h3><canvas id="chart-temp"></canvas></div>
-                    <div class="chart-card"><h3>Particulate Matter (µg/m³)</h3><canvas id="chart-pm"></canvas></div>
-                    <div class="chart-card"><h3>Humidity (%)</h3><canvas id="chart-hum"></canvas></div>
-                    <div class="chart-card"><h3>Pressure (hPa)</h3><canvas id="chart-pres"></canvas></div>
-                    <div class="chart-card"><h3>CO₂ (ppm)</h3><canvas id="chart-co2"></canvas></div>
-                    <div class="chart-card"><h3>VOC (ppb)</h3><canvas id="chart-voc"></canvas></div>
-                </section>
-            </div>
+            <!-- removed embedded stats UI and canvases from index page -->
         </div>
 
     </section>
@@ -106,8 +91,6 @@
         </div>
     </section>
 </body>
-
-<!-- Ensure Chart.js is loaded before our script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="script.js"></script>
 </html>
