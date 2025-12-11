@@ -6,9 +6,9 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     line-height: 1.6;
-    color: #333;
+    color: #222;
 }
 
 /* Header */
@@ -17,6 +17,7 @@ header {
     color: white;
     text-align: center;
     padding: 40px 20px;
+    border-bottom: 1px solid #eee;
 }
 
 header h1 {
@@ -167,4 +168,103 @@ a:hover {
 /* small helper for card actions */
 .card-actions {
     margin-top: 8px;
+}
+
+/* basic shared styles and stats page layout */
+.stats-main {
+    padding: 1rem;
+}
+
+.data-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.file-label {
+    display: inline-block;
+    padding: .5rem 1rem;
+    background: #0078d4;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.file-label input {
+    display: none;
+}
+
+.url-load input {
+    padding: .5rem;
+    width: 320px;
+    max-width: 60vw;
+}
+
+.url-load button {
+    padding: .5rem .75rem;
+    margin-left: .5rem;
+}
+
+.status {
+    width: 100%;
+    color: #555;
+    font-size: .95rem;
+    margin-top: .5rem;
+}
+
+/* charts grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.chart-card {
+    background: #fff;
+    border: 1px solid #eee;
+    padding: .75rem;
+    border-radius: 8px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.chart-card h3 {
+    margin: 0 0 .5rem 0;
+    font-size: 1rem;
+}
+
+.chart-card canvas {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+}
+
+/* No data overlay for charts */
+.chart-empty-overlay {
+  position: absolute;
+  inset: 48px 12px 12px 12px; /* leave room for the title area */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+  background: rgba(255,255,255,0.9);
+  color: #666;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+/* Fallback: hide legacy data-source notices if present */
+#data-sources,
+.data-sources,
+.datasources,
+.legacy-data-sources,
+.notice-data-sources,
+[data-note="data-sources"] {
+    display: none !important;
 }

@@ -6,61 +6,67 @@
   <title>IoT Statistics - Air Quality</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* minimal page-specific styling */
     body { font-family: Arial, sans-serif; padding: 16px; }
     h1 { margin-bottom: 8px; }
-    .metrics { display: grid; grid-template-columns: 1fr; gap: 12px; max-width: 900px; }
+    .metrics { display: grid; grid-template-columns: 1fr; gap: 12px; max-width: 1200px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
-    .charts { display: flex; gap: 12px; margin-top: 12px; flex-wrap:wrap; }
-    canvas { background: #fff; border:1px solid #e0e0e0; border-radius: 6px; }
+    .charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
+    .chart-container { background: #fff; border:1px solid #e0e0e0; border-radius: 6px; padding: 12px; }
+    canvas { width: 100%; height: auto; }
     .note { color: #666; font-size: 14px; margin-top: 8px; }
     a.button { display:inline-block; margin-top:12px; padding:8px 12px; background:#24292e; color:#fff; text-decoration:none; border-radius:6px; }
-    .upload-panel { margin-top:12px; padding:10px; border:1px dashed #bbb; border-radius:6px; background:#fafafa; }
-    .hidden { display:none; }
+    .button { background: #24292e; color: #fff; border: none; padding: 8px 12px; cursor: pointer; border-radius: 6px; }
   </style>
 </head>
 <body>
   <a href="index.html" class="button">← Back</a>
   <h1>IoT Air Quality — Statistics</h1>
-  <p class="note">Data sources: data_without_voc.json (and data_with_voc.json if present). If you opened this page via file:// the browser may block direct fetch — use the upload fallback below or run a local server (e.g. python -m http.server).</p>
+  <p class="note">Data sources: data_without_voc.json. If fetch doesn't work, use the upload panel below or run a local server.</p>
 
   <div class="metrics">
-    <div id="summary">
-      <!-- summary table inserted here -->
-    </div>
+    <div id="summary">Loading...</div>
 
     <div class="charts">
-      <div>
+      <div class="chart-container">
         <h3>Temperature (°C)</h3>
-        <canvas id="tempChart" width="420" height="120"></canvas>
+        <canvas id="tempChart"></canvas>
       </div>
-      <div>
+      <div class="chart-container">
         <h3>PM2.5 (µg/m³)</h3>
-        <canvas id="pmChart" width="420" height="120"></canvas>
+        <canvas id="pmChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Humidity (%)</h3>
+        <canvas id="humChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Pressure (hPa)</h3>
+        <canvas id="presChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>CO₂ (ppm)</h3>
+        <canvas id="co2Chart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>PM10 (µg/m³)</h3>
+        <canvas id="pm10Chart"></canvas>
       </div>
     </div>
 
     <!-- Upload fallback -->
-    <div id="uploadPanel" class="upload-panel hidden">
-      <p><strong>Upload JSON files (fallback):</strong></p>
-      <p>Select one or both JSON files from your portfolio folder:</p>
-      <div>
-        <label>data_without_voc.json: <input id="fileA" type="file" accept=".json"></label>
-      </div>
-      <div>
-        <label>data_with_voc.json (optional): <input id="fileB" type="file" accept=".json"></label>
-      </div>
+    <div id="uploadPanel" style="margin-top:20px; padding:10px; border:1px dashed #bbb; border-radius:6px; background:#fafafa;">
+      <p><strong>Upload JSON file (fallback):</strong></p>
+      <label>data_without_voc.json: <input id="fileA" type="file" accept=".json"></label>
       <div style="margin-top:8px;">
-        <button id="loadUploads" class="github-button">Load uploaded files</button>
-        <button id="clearUploads" class="github-button" style="background:#888">Clear</button>
+        <button id="loadUploads" class="button">Load uploaded file</button>
+        <button id="clearUploads" class="button" style="background:#888; margin-left:8px;">Clear</button>
       </div>
-      <p class="note">Tip: Running a local server (python -m http.server) lets the page fetch files directly.</p>
     </div>
   </div>
 
   <script>
-    // load one or both JSON files using fetch (works when served via http)
+    // Load JSON via fetch
     async function loadJSONFetch(path) {
       try {
         const r = await fetch(path);
@@ -71,7 +77,7 @@
       }
     }
 
-    // read a File object (uploaded) and parse JSON
+    // Read File object
     function readFileJSON(file) {
       return new Promise((resolve, reject) => {
         if (!file) return resolve(null);
@@ -91,12 +97,14 @@
 
     function statsFor(values) {
       if (!values || !values.length) return null;
-      const sum = values.reduce((a,b)=>a+b,0);
+      const nums = values.filter(v => typeof v === 'number' && !isNaN(v));
+      if (!nums.length) return null;
+      const sum = nums.reduce((a,b)=>a+b,0);
       return {
-        latest: +(values[values.length-1]).toFixed(2),
-        min: +(Math.min(...values)).toFixed(2),
-        max: +(Math.max(...values)).toFixed(2),
-        avg: +(sum/values.length).toFixed(2)
+        latest: +(nums[nums.length-1]).toFixed(2),
+        min: +(Math.min(...nums)).toFixed(2),
+        max: +(Math.max(...nums)).toFixed(2),
+        avg: +(sum/nums.length).toFixed(2)
       };
     }
 
@@ -117,109 +125,117 @@
 
     function drawLine(canvas, data, color='#0074D9') {
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
       if (!data || !data.length) {
-        // draw empty message
-        ctx.fillStyle = '#666';
-        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#999';
+        ctx.font = '14px sans-serif';
         ctx.fillText('No data', 10, 20);
         return;
       }
-      const w = canvas.width, h = canvas.height, pad=10;
-      const max = Math.max(...data), min = Math.min(...data);
+
+      const w = canvas.width, h = canvas.height, pad = 20;
+      const nums = data.filter(v => typeof v === 'number' && !isNaN(v));
+      if (!nums.length) {
+        ctx.fillStyle = '#999';
+        ctx.font = '14px sans-serif';
+        ctx.fillText('No data', 10, 20);
+        return;
+      }
+
+      const max = Math.max(...nums);
+      const min = Math.min(...nums);
       const range = (max - min) || 1;
+
+      // Draw line
       ctx.beginPath();
-      data.forEach((v,i)=>{
-        const x = pad + i*( (w - pad*2) / Math.max(1, data.length-1) );
-        const y = h - pad - ((v - min)/range)*(h - pad*2);
-        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      nums.forEach((v, i) => {
+        const x = pad + i * ((w - pad * 2) / Math.max(1, nums.length - 1));
+        const y = h - pad - ((v - min) / range) * (h - pad * 2);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       });
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // axes markers
+      // Draw axis labels
       ctx.fillStyle = '#333';
       ctx.font = '12px sans-serif';
-      ctx.fillText(max.toFixed(1), 4, 12);
-      ctx.fillText(min.toFixed(1), 4, h - 4);
+      ctx.textAlign = 'right';
+      ctx.fillText(max.toFixed(1), w - 5, 15);
+      ctx.fillText(min.toFixed(1), w - 5, h - 5);
     }
 
     function processReadings(readings) {
-      readings.sort((x,y)=> new Date(x.timestamp) - new Date(y.timestamp));
-      if (!readings.length) {
-        document.getElementById('summary').innerHTML = '<p>No readings found. Use the upload controls below or run a local server (python -m http.server) to enable fetch.</p>';
-        document.getElementById('uploadPanel').classList.remove('hidden');
+      if (!readings || !readings.length) {
+        document.getElementById('summary').innerHTML = '<p>No readings found.</p>';
         return;
       }
-      document.getElementById('uploadPanel').classList.add('hidden');
 
-      const temp = readings.map(r=>Number(r.temperature)).filter(v=>!isNaN(v));
-      const press = readings.map(r=>Number(r.pressure)).filter(v=>!isNaN(v));
-      const hum = readings.map(r=>Number(r.humidity)).filter(v=>!isNaN(v));
-      const co2 = readings.map(r=>Number(r.co2ppm)).filter(v=>!isNaN(v));
-      const pm25 = readings.map(r=>Number(r.pm2_5)).filter(v=>!isNaN(v));
-      const pm10 = readings.map(r=>Number(r.pm10)).filter(v=>!isNaN(v));
+      readings.sort((x, y) => new Date(x.timestamp) - new Date(y.timestamp));
+
+      const temp = readings.map(r => Number(r.temperature));
+      const press = readings.map(r => Number(r.pressure));
+      const hum = readings.map(r => Number(r.humidity));
+      const co2 = readings.map(r => Number(r.co2ppm));
+      const pm25 = readings.map(r => Number(r.pm2_5));
+      const pm10 = readings.map(r => Number(r.pm10));
 
       const stats = {
         "Temperature (°C)": statsFor(temp),
-        "Pressure (hPa or raw)": statsFor(press),
+        "Pressure (hPa)": statsFor(press),
         "Humidity (%)": statsFor(hum),
-        "CO2 (ppm)": statsFor(co2),
+        "CO₂ (ppm)": statsFor(co2),
         "PM2.5 (µg/m³)": statsFor(pm25),
         "PM10 (µg/m³)": statsFor(pm10)
       };
 
       renderTable(stats);
 
-      const N = 60;
-      drawLine(document.getElementById('tempChart'), temp.slice(-N), '#e96464');
-      drawLine(document.getElementById('pmChart'), pm25.slice(-N), '#4a90e2');
+      // Draw all 6 charts
+      drawLine(document.getElementById('tempChart'), temp, '#e96464');
+      drawLine(document.getElementById('pmChart'), pm25, '#4a90e2');
+      drawLine(document.getElementById('humChart'), hum, '#9966cc');
+      drawLine(document.getElementById('presChart'), press, '#ff9900');
+      drawLine(document.getElementById('co2Chart'), co2, '#666666');
+      drawLine(document.getElementById('pm10Chart'), pm10, '#00aa55');
     }
 
-    (async function(){
-      // Attempt fetch first (works when served via http)
-      const a = await loadJSONFetch('data_without_voc.json');
-      const b = await loadJSONFetch('data_with_voc.json'); // optional
-      const readings = [];
-      if (a && Array.isArray(a.readings)) readings.push(...a.readings);
-      if (b && Array.isArray(b.readings)) readings.push(...b.readings);
-
-      if (readings.length) {
-        processReadings(readings);
+    (async function() {
+      // Try to fetch data
+      const data = await loadJSONFetch('data_without_voc.json');
+      
+      if (data && Array.isArray(data.readings) && data.readings.length) {
+        processReadings(data.readings);
         return;
       }
 
-      // If fetch failed or returned no data, show upload panel
-      document.getElementById('summary').innerHTML = '<p>No readings found via fetch. If you opened this page with file:// the browser may block fetch. Use the upload controls below or run a local server.</p>';
-      document.getElementById('uploadPanel').classList.remove('hidden');
+      // If fetch failed, show upload panel
+      document.getElementById('summary').innerHTML = '<p>No data loaded via fetch. Use the upload panel below.</p>';
 
-      // wire upload buttons
+      // Wire upload buttons
       const fileAInput = document.getElementById('fileA');
-      const fileBInput = document.getElementById('fileB');
       const loadBtn = document.getElementById('loadUploads');
       const clearBtn = document.getElementById('clearUploads');
 
       loadBtn.addEventListener('click', async () => {
         try {
-          const fileA = fileAInput.files[0] || null;
-          const fileB = fileBInput.files[0] || null;
-          const pa = await readFileJSON(fileA).catch(()=>null);
-          const pb = await readFileJSON(fileB).catch(()=>null);
-          const merged = [];
-          if (pa && Array.isArray(pa.readings)) merged.push(...pa.readings);
-          if (pb && Array.isArray(pb.readings)) merged.push(...pb.readings);
-          processReadings(merged);
+          const fileA = fileAInput.files[0];
+          const parsed = await readFileJSON(fileA);
+          if (parsed && Array.isArray(parsed.readings)) {
+            processReadings(parsed.readings);
+          } else {
+            alert('Invalid JSON format. Expected {readings: [...]}');
+          }
         } catch (err) {
-          document.getElementById('summary').innerHTML = '<p>Error parsing uploaded files. Make sure you selected JSON files.</p>';
+          alert('Error: ' + err.message);
         }
       });
 
       clearBtn.addEventListener('click', () => {
         fileAInput.value = '';
-        fileBInput.value = '';
       });
-
     })();
   </script>
 </body>

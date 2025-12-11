@@ -53,7 +53,7 @@
             <h3>Roman Number Quiz Game</h3>
             <p>A fun educational game built with Python. Players convert between Roman numerals and Arabic numbers.</p>
             <p class="tech">Python, CSV</p>
-            <button id="github-btn" class="github-button" data-repo="https://github.com/yourusername/roman-number-quiz">View on GitHub</button>
+            <button id="github-btn" class="github-button" data-repo="https://github.com/Tigranoff/RomanNumberQuizGame.git">View on GitHub</button>
         </div>
 
         <!-- New IoT project card -->
@@ -62,8 +62,33 @@
             <p>ESP32-based air quality project collecting temperature, pressure, humidity, CO2 and particulate matter. Visualized statistics from collected JSON data.</p>
             <p class="tech">ESP32, Sensors, JSON, JavaScript</p>
             <div class="card-actions">
-                <button id="github-iot-btn" class="github-button" data-repo="https://github.com/yourusername/iot-air-quality">View on GitHub</button>
+                <!-- updated repo URL as requested -->
+                <button id="github-iot-btn" class="github-button" data-repo="https://github.com/Tigranoff/portfolio-air_quality_measurement.git">View on GitHub</button>
                 <a href="stats.html" class="github-button">View Statistics</a>
+            </div>
+
+            <!-- Stats UI & charts (upload fallback + canvases for all charts) -->
+            <div class="stats-main" style="margin-top:16px;">
+                <section class="data-controls">
+                    <label class="file-label">
+                        Upload JSON
+                        <input id="data-upload" type="file" accept=".json,application/json">
+                    </label>
+                    <div class="url-load">
+                        <input id="data-url" type="text" placeholder="Optional: paste JSON URL and press Load (CORS permitting)">
+                        <button id="load-url">Load URL</button>
+                    </div>
+                    <div id="status" class="status" aria-live="polite"></div>
+                </section>
+
+                <section class="charts-grid">
+                    <div class="chart-card"><h3>Temperature (°C)</h3><canvas id="chart-temp"></canvas></div>
+                    <div class="chart-card"><h3>Particulate Matter (µg/m³)</h3><canvas id="chart-pm"></canvas></div>
+                    <div class="chart-card"><h3>Humidity (%)</h3><canvas id="chart-hum"></canvas></div>
+                    <div class="chart-card"><h3>Pressure (hPa)</h3><canvas id="chart-pres"></canvas></div>
+                    <div class="chart-card"><h3>CO₂ (ppm)</h3><canvas id="chart-co2"></canvas></div>
+                    <div class="chart-card"><h3>VOC (ppb)</h3><canvas id="chart-voc"></canvas></div>
+                </section>
             </div>
         </div>
 
@@ -88,5 +113,8 @@
         </div>
     </section>
 </body>
-    <script src="script.js"></script>
+
+<!-- Ensure Chart.js is loaded before our script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
 </html>
