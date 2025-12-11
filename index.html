@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tigran Eloyan - Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Tigran Eloyan</h1>
+        <p>Computer Science Student</p>
+    </header>
+
+    <nav>
+        <a href="#about">About</a>
+        <a href="#education">Education</a>
+        <a href="#projects">Projects</a>
+        <a href="#skills">Skills</a>
+    </nav>
+
+    <section id="about">
+        <h2>About Me</h2>
+        <img src="tigran.jpg" alt="Tigran Eloyan" class="profile-img">
+        <p>Hello! I'm Tigran, a Computer Science student at UFAR. I love learning new things and solving problems.</p>
+        <div class="contact-info">
+            <p><strong>Email:</strong> tigraneloyan05@gmail.com</p>
+            <p><strong>Phone:</strong> 055-21-41-77</p>
+            <p><strong>Location:</strong> Yerevan, Armenia</p>
+        </div>
+    </section>
+
+    <section id="education">
+        <h2>Education</h2>
+        
+        <div class="card">
+            <h3>Computer Science</h3>
+            <p class="date">2023 - Present</p>
+            <p>French University in Armenia (UFAR)</p>
+        </div>
+
+        <div class="card">
+            <h3>High School</h3>
+            <p class="date">2020 - 2023</p>
+            <p>School N170, Yerevan</p>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2>My Projects</h2>
+        
+        <div class="card">
+            <h3>Roman Number Quiz Game</h3>
+            <p>A fun educational game built with Python. Players convert between Roman numerals and Arabic numbers.</p>
+            <p class="tech">Python, CSV</p>
+            <button id="github-btn" class="github-button" data-repo="https://github.com/yourusername/roman-number-quiz">View on GitHub</button>
+        </div>
+
+        <!-- New IoT project card -->
+        <div class="card">
+            <h3>IoT Air Quality Monitor</h3>
+            <p>ESP32-based air quality project collecting temperature, pressure, humidity, CO2 and particulate matter. Visualized statistics from collected JSON data.</p>
+            <p class="tech">ESP32, Sensors, JSON, JavaScript</p>
+            <div class="card-actions">
+                <button id="github-iot-btn" class="github-button" data-repo="https://github.com/yourusername/iot-air-quality">View on GitHub</button>
+                <a href="stats.html" class="github-button">View Statistics</a>
+            </div>
+        </div>
+
+    </section>
+
+    <section id="skills">
+        <h2>Skills</h2>
+        
+        <div class="skills-grid">
+            <div class="skill-box">Python</div>
+            <div class="skill-box">C</div>
+            <div class="skill-box">Git</div>
+            <div class="skill-box">Bash</div>
+        </div>
+
+        <h3>Languages</h3>
+        <div class="skills-grid">
+            <div class="skill-box">Armenian - Native</div>
+            <div class="skill-box">English - B2</div>
+            <div class="skill-box">Russian - B2</div>
+            <div class="skill-box">German - B1</div>
+        </div>
+    </section>
+</body>
+    <script src="script.js"></script>
+</html>

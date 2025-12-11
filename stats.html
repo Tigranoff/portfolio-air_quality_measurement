@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IoT Statistics - Air Quality</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* minimal page-specific styling */
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    h1 { margin-bottom: 8px; }
+    .metrics { display: grid; grid-template-columns: 1fr; gap: 12px; max-width: 900px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+    .charts { display: flex; gap: 12px; margin-top: 12px; flex-wrap:wrap; }
+    canvas { background: #fff; border:1px solid #e0e0e0; border-radius: 6px; }
+    .note { color: #666; font-size: 14px; margin-top: 8px; }
+    a.button { display:inline-block; margin-top:12px; padding:8px 12px; background:#24292e; color:#fff; text-decoration:none; border-radius:6px; }
+    .upload-panel { margin-top:12px; padding:10px; border:1px dashed #bbb; border-radius:6px; background:#fafafa; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="button">← Back</a>
+  <h1>IoT Air Quality — Statistics</h1>
+  <p class="note">Data sources: data_without_voc.json (and data_with_voc.json if present). If you opened this page via file:// the browser may block direct fetch — use the upload fallback below or run a local server (e.g. python -m http.server).</p>
+
+  <div class="metrics">
+    <div id="summary">
+      <!-- summary table inserted here -->
+    </div>
+
+    <div class="charts">
+      <div>
+        <h3>Temperature (°C)</h3>
+        <canvas id="tempChart" width="420" height="120"></canvas>
+      </div>
+      <div>
+        <h3>PM2.5 (µg/m³)</h3>
+        <canvas id="pmChart" width="420" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- Upload fallback -->
+    <div id="uploadPanel" class="upload-panel hidden">
+      <p><strong>Upload JSON files (fallback):</strong></p>
+      <p>Select one or both JSON files from your portfolio folder:</p>
+      <div>
+        <label>data_without_voc.json: <input id="fileA" type="file" accept=".json"></label>
+      </div>
+      <div>
+        <label>data_with_voc.json (optional): <input id="fileB" type="file" accept=".json"></label>
+      </div>
+      <div style="margin-top:8px;">
+        <button id="loadUploads" class="github-button">Load uploaded files</button>
+        <button id="clearUploads" class="github-button" style="background:#888">Clear</button>
+      </div>
+      <p class="note">Tip: Running a local server (python -m http.server) lets the page fetch files directly.</p>
+    </div>
+  </div>
+
+  <script>
+    // load one or both JSON files using fetch (works when served via http)
+    async function loadJSONFetch(path) {
+      try {
+        const r = await fetch(path);
+        if (!r.ok) throw new Error('not found');
+        return await r.json();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // read a File object (uploaded) and parse JSON
+    function readFileJSON(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            resolve(parsed);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(file);
+      });
+    }
+
+    function statsFor(values) {
+      if (!values || !values.length) return null;
+      const sum = values.reduce((a,b)=>a+b,0);
+      return {
+        latest: +(values[values.length-1]).toFixed(2),
+        min: +(Math.min(...values)).toFixed(2),
+        max: +(Math.max(...values)).toFixed(2),
+        avg: +(sum/values.length).toFixed(2)
+      };
+    }
+
+    function renderTable(stats) {
+      const keys = Object.keys(stats);
+      let html = '<table><thead><tr><th>Metric</th><th>Latest</th><th>Min</th><th>Max</th><th>Average</th></tr></thead><tbody>';
+      keys.forEach(k=>{
+        const s = stats[k];
+        if (!s) {
+          html += `<tr><td>${k}</td><td colspan="4">N/A</td></tr>`;
+        } else {
+          html += `<tr><td>${k}</td><td>${s.latest}</td><td>${s.min}</td><td>${s.max}</td><td>${s.avg}</td></tr>`;
+        }
+      });
+      html += '</tbody></table>';
+      document.getElementById('summary').innerHTML = html;
+    }
+
+    function drawLine(canvas, data, color='#0074D9') {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if (!data || !data.length) {
+        // draw empty message
+        ctx.fillStyle = '#666';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('No data', 10, 20);
+        return;
+      }
+      const w = canvas.width, h = canvas.height, pad=10;
+      const max = Math.max(...data), min = Math.min(...data);
+      const range = (max - min) || 1;
+      ctx.beginPath();
+      data.forEach((v,i)=>{
+        const x = pad + i*( (w - pad*2) / Math.max(1, data.length-1) );
+        const y = h - pad - ((v - min)/range)*(h - pad*2);
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // axes markers
+      ctx.fillStyle = '#333';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(max.toFixed(1), 4, 12);
+      ctx.fillText(min.toFixed(1), 4, h - 4);
+    }
+
+    function processReadings(readings) {
+      readings.sort((x,y)=> new Date(x.timestamp) - new Date(y.timestamp));
+      if (!readings.length) {
+        document.getElementById('summary').innerHTML = '<p>No readings found. Use the upload controls below or run a local server (python -m http.server) to enable fetch.</p>';
+        document.getElementById('uploadPanel').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('uploadPanel').classList.add('hidden');
+
+      const temp = readings.map(r=>Number(r.temperature)).filter(v=>!isNaN(v));
+      const press = readings.map(r=>Number(r.pressure)).filter(v=>!isNaN(v));
+      const hum = readings.map(r=>Number(r.humidity)).filter(v=>!isNaN(v));
+      const co2 = readings.map(r=>Number(r.co2ppm)).filter(v=>!isNaN(v));
+      const pm25 = readings.map(r=>Number(r.pm2_5)).filter(v=>!isNaN(v));
+      const pm10 = readings.map(r=>Number(r.pm10)).filter(v=>!isNaN(v));
+
+      const stats = {
+        "Temperature (°C)": statsFor(temp),
+        "Pressure (hPa or raw)": statsFor(press),
+        "Humidity (%)": statsFor(hum),
+        "CO2 (ppm)": statsFor(co2),
+        "PM2.5 (µg/m³)": statsFor(pm25),
+        "PM10 (µg/m³)": statsFor(pm10)
+      };
+
+      renderTable(stats);
+
+      const N = 60;
+      drawLine(document.getElementById('tempChart'), temp.slice(-N), '#e96464');
+      drawLine(document.getElementById('pmChart'), pm25.slice(-N), '#4a90e2');
+    }
+
+    (async function(){
+      // Attempt fetch first (works when served via http)
+      const a = await loadJSONFetch('data_without_voc.json');
+      const b = await loadJSONFetch('data_with_voc.json'); // optional
+      const readings = [];
+      if (a && Array.isArray(a.readings)) readings.push(...a.readings);
+      if (b && Array.isArray(b.readings)) readings.push(...b.readings);
+
+      if (readings.length) {
+        processReadings(readings);
+        return;
+      }
+
+      // If fetch failed or returned no data, show upload panel
+      document.getElementById('summary').innerHTML = '<p>No readings found via fetch. If you opened this page with file:// the browser may block fetch. Use the upload controls below or run a local server.</p>';
+      document.getElementById('uploadPanel').classList.remove('hidden');
+
+      // wire upload buttons
+      const fileAInput = document.getElementById('fileA');
+      const fileBInput = document.getElementById('fileB');
+      const loadBtn = document.getElementById('loadUploads');
+      const clearBtn = document.getElementById('clearUploads');
+
+      loadBtn.addEventListener('click', async () => {
+        try {
+          const fileA = fileAInput.files[0] || null;
+          const fileB = fileBInput.files[0] || null;
+          const pa = await readFileJSON(fileA).catch(()=>null);
+          const pb = await readFileJSON(fileB).catch(()=>null);
+          const merged = [];
+          if (pa && Array.isArray(pa.readings)) merged.push(...pa.readings);
+          if (pb && Array.isArray(pb.readings)) merged.push(...pb.readings);
+          processReadings(merged);
+        } catch (err) {
+          document.getElementById('summary').innerHTML = '<p>Error parsing uploaded files. Make sure you selected JSON files.</p>';
+        }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        fileAInput.value = '';
+        fileBInput.value = '';
+      });
+
+    })();
+  </script>
+</body>
+</html>
