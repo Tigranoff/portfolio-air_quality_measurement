@@ -1,13 +1,3 @@
-// Read file upload
-document.getElementById("data-upload").addEventListener("change", function () {
-  const file = this.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => loadJSON(JSON.parse(e.target.result));
-  reader.readAsText(file);
-});
-
 // Read URL load
 document.getElementById("load-url").addEventListener("click", async function () {
   const url = document.getElementById("data-url").value.trim();
@@ -73,3 +63,39 @@ function loadJSON(data) {
   // VOC raw or index
   createChart("chart-voc", "VOC Raw (SGP40)", voc, "brown");
 }
+
+(function () {
+  // Run only if the stats page elements exist (either load button or a chart canvas)
+  if (!document.getElementById('load-url') && !document.getElementById('chart-temp')) return;
+
+  const urlEl = document.getElementById('data-url');
+  const loadUrlBtn = document.getElementById('load-url');
+  const statusEl = document.getElementById('status');
+
+  let charts = {};
+
+  loadUrlBtn.addEventListener('click', async () => {
+    const url = urlEl.value.trim();
+    if (!url) {
+      status('Please paste a URL first.');
+      return;
+    }
+    status('Fetching URL...');
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+      const data = await res.json();
+      renderFromData(data);
+      status('Loaded from URL.');
+    } catch (err) {
+      status('Failed to fetch/parse URL: ' + err.message);
+    }
+  });
+
+  function status(msg) {
+    statusEl.textContent = msg;
+  }
+
+  // ...existing code (normalizeInput, parseTimestamp, renderFromData, etc.) ...
+
+})();

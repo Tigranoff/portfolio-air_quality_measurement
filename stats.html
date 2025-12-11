@@ -17,12 +17,15 @@
     .note { color: #666; font-size: 14px; margin-top: 8px; }
     a.button { display:inline-block; margin-top:12px; padding:8px 12px; background:#24292e; color:#fff; text-decoration:none; border-radius:6px; }
     .button { background: #24292e; color: #fff; border: none; padding: 8px 12px; cursor: pointer; border-radius: 6px; }
+    .data-controls { margin-bottom: 20px; }
+    .url-load { display: flex; gap: 8px; }
+    .url-load input { flex: 1; }
+    .status { margin-top: 8px; font-size: 14px; color: #333; }
   </style>
 </head>
 <body>
   <a href="index.html" class="button">← Back</a>
   <h1>IoT Air Quality — Statistics</h1>
-  <p class="note">Data sources: data_without_voc.json. If fetch doesn't work, use the upload panel below or run a local server.</p>
 
   <div class="metrics">
     <div id="summary">Loading...</div>
@@ -54,15 +57,14 @@
       </div>
     </div>
 
-    <!-- Upload fallback -->
-    <div id="uploadPanel" style="margin-top:20px; padding:10px; border:1px dashed #bbb; border-radius:6px; background:#fafafa;">
-      <p><strong>Upload JSON file (fallback):</strong></p>
-      <label>data_without_voc.json: <input id="fileA" type="file" accept=".json"></label>
-      <div style="margin-top:8px;">
-        <button id="loadUploads" class="button">Load uploaded file</button>
-        <button id="clearUploads" class="button" style="background:#888; margin-left:8px;">Clear</button>
+    <section class="data-controls">
+      <div class="url-load">
+        <input id="data-url" type="text" placeholder="Paste JSON URL" aria-label="JSON URL">
+        <button id="load-url">Load</button>
       </div>
-    </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+    </section>
   </div>
 
   <script>
