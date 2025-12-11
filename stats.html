@@ -51,6 +51,12 @@
         <h3>CO₂ (ppm)</h3>
         <canvas id="co2Chart"></canvas>
       </div>
+
+      <div class="chart-container">
+        <h3>TVOC (index)</h3>
+        <canvas id="tvocChart"></canvas>
+      </div>
+
       <div class="chart-container">
         <h3>PM10 (µg/m³)</h3>
         <canvas id="pm10Chart"></canvas>
@@ -175,64 +181,58 @@
       const temp = readings.map(r => Number(r.temperature));
       const press = readings.map(r => Number(r.pressure));
       const hum = readings.map(r => Number(r.humidity));
-      const co2 = readings.map(r => Number(r.co2ppm));
-      const pm25 = readings.map(r => Number(r.pm2_5));
+      const co2 = readings.map(r => Number(r.co2ppm ?? r.co2));
+      const pm25 = readings.map(r => Number(r.pm2_5 ?? r.pm2));
       const pm10 = readings.map(r => Number(r.pm10));
+
+      // Extract TVOC values from common keys (tvoc_index, tvoc, tvocIndex, tvoc_ppb)
+      const tvoc = readings.map(r => {
+        const v = r.tvoc_index ?? r.tvoc ?? r.tvocIndex ?? r.tvoc_ppb ?? r.tvoc_ppb ?? r.tvoc_ppm;
+        return v === undefined ? NaN : Number(v);
+      });
 
       const stats = {
         "Temperature (°C)": statsFor(temp),
         "Pressure (hPa)": statsFor(press),
         "Humidity (%)": statsFor(hum),
         "CO₂ (ppm)": statsFor(co2),
+        "TVOC (index)": statsFor(tvoc),
         "PM2.5 (µg/m³)": statsFor(pm25),
         "PM10 (µg/m³)": statsFor(pm10)
       };
 
       renderTable(stats);
 
-      // Draw all 6 charts
+      // Draw all charts
       drawLine(document.getElementById('tempChart'), temp, '#e96464');
       drawLine(document.getElementById('pmChart'), pm25, '#4a90e2');
       drawLine(document.getElementById('humChart'), hum, '#9966cc');
       drawLine(document.getElementById('presChart'), press, '#ff9900');
       drawLine(document.getElementById('co2Chart'), co2, '#666666');
+      drawLine(document.getElementById('tvocChart'), tvoc, '#ff66aa');
       drawLine(document.getElementById('pm10Chart'), pm10, '#00aa55');
     }
 
     (async function() {
-      // Try to fetch data
-      const data = await loadJSONFetch('data_without_voc.json');
-      
-      if (data && Array.isArray(data.readings) && data.readings.length) {
-        processReadings(data.readings);
+      // Try to load both local files and merge readings (voc.json may contain tvoc values).
+      const a = await loadJSONFetch('data_without_voc.json');
+      const b = await loadJSONFetch('voc.json');
+      const combined = [];
+      if (a) {
+        if (Array.isArray(a.readings)) combined.push(...a.readings);
+        else if (Array.isArray(a)) combined.push(...a);
+      }
+      if (b) {
+        if (Array.isArray(b.readings)) combined.push(...b.readings);
+        else if (Array.isArray(b)) combined.push(...b);
+      }
+
+      if (combined.length) {
+        processReadings(combined);
         return;
       }
 
-      // If fetch failed, show upload panel
-      document.getElementById('summary').innerHTML = '<p>No data loaded via fetch. Use the upload panel below.</p>';
-
-      // Wire upload buttons
-      const fileAInput = document.getElementById('fileA');
-      const loadBtn = document.getElementById('loadUploads');
-      const clearBtn = document.getElementById('clearUploads');
-
-      loadBtn.addEventListener('click', async () => {
-        try {
-          const fileA = fileAInput.files[0];
-          const parsed = await readFileJSON(fileA);
-          if (parsed && Array.isArray(parsed.readings)) {
-            processReadings(parsed.readings);
-          } else {
-            alert('Invalid JSON format. Expected {readings: [...]}');
-          }
-        } catch (err) {
-          alert('Error: ' + err.message);
-        }
-      });
-
-      clearBtn.addEventListener('click', () => {
-        fileAInput.value = '';
-      });
+      document.getElementById('summary').innerHTML = '<p>No data found. Place data_without_voc.json and voc.json next to this page.</p>';
     })();
   </script>
 </body>
