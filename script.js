@@ -65,66 +65,55 @@ function loadJSON(data) {
 }
 
 (function () {
-  // Run only if the stats page elements exist (either load button or a chart canvas)
-  if (!document.getElementById('load-url') && !document.getElementById('chart-temp')) return;
-
-  const urlEl = document.getElementById('data-url');
-  const loadUrlBtn = document.getElementById('load-url');
+  // Run only if stats UI exists (chart canvas or status)
+  if (!document.getElementById('chart-temp') && !document.getElementById('status')) return;
   const statusEl = document.getElementById('status');
 
   let charts = {};
 
-  // Accept multiple comma-separated URLs, or if empty try default local files (voc + without_voc).
-  loadUrlBtn.addEventListener('click', async () => {
-    const raw = (urlEl && urlEl.value || '').trim();
-    let urls = [];
-    if (raw) {
-      // split by comma and trim
-      urls = raw.split(/\s*,\s*/).filter(Boolean);
-    } else {
-      // try common local filenames (voc first), useful when deployed on a server
-      urls = ['./data_with_voc.json', './data_without_voc.json', './data_without_voc.json'];
-    }
-
-    status('Fetching JSON...');
-    try {
-      const combined = [];
-      for (const u of urls) {
-        status(`Fetching ${u} ...`);
-        try {
-          const res = await fetch(u, { cache: 'no-store' });
-          if (!res.ok) {
-            console.warn('Fetch failed for', u, res.status);
-            continue;
-          }
-          const parsed = await res.json();
-          // normalizeInput will return an array when parsed has 'readings' or similar
-          const arr = normalizeInput(parsed);
-          if (Array.isArray(arr) && arr.length) {
-            combined.push(...arr);
-          } else if (Array.isArray(parsed) && parsed.length) {
-            combined.push(...parsed);
-          } else {
-            // nothing usable in this file
-            console.info('No array found in', u);
-          }
-        } catch (errFetch) {
-          console.warn('Error fetching/parsing', u, errFetch);
+  // Auto-load local JSON files (voc.json + data_without_voc.json) and merge them.
+  (async function autoLoadLocalFiles() {
+    const localFiles = ['./voc.json', './data_without_voc.json'];
+    status('Loading local data files...');
+    const combined = [];
+    for (const f of localFiles) {
+      status(`Fetching ${f} ...`);
+      try {
+        const res = await fetch(f, { cache: 'no-store' });
+        if (!res.ok) {
+          console.warn('fetch failed for', f, res.status);
+          continue;
         }
+        const parsed = await res.json();
+        const arr = normalizeInput(parsed);
+        if (Array.isArray(arr) && arr.length) {
+          combined.push(...arr);
+          continue;
+        }
+        if (Array.isArray(parsed) && parsed.length) {
+          combined.push(...parsed);
+          continue;
+        }
+        // try common property "readings"
+        if (parsed && Array.isArray(parsed.readings)) {
+          combined.push(...parsed.readings);
+          continue;
+        }
+        console.info('No array found in', f);
+      } catch (err) {
+        console.warn('Error fetching/parsing', f, err);
       }
-
-      if (!combined.length) {
-        status('No data loaded from provided URL(s). Paste valid JSON URL(s) or host JSON files alongside this site.');
-        return;
-      }
-
-      // merged readings array -> render
-      renderFromData(combined);
-      status('Loaded data from URL(s).');
-    } catch (err) {
-      status('Failed to fetch/parse URL(s): ' + err.message);
     }
-  });
+
+    if (!combined.length) {
+      status('No local data found. Place voc.json and data_without_voc.json next to this page.');
+      return;
+    }
+
+    // render combined data (renderFromData sorts by timestamp)
+    renderFromData(combined);
+    status('Loaded local data (voc + non-voc).');
+  })();
 
   function status(msg) {
     statusEl.textContent = msg;

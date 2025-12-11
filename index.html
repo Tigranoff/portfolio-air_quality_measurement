@@ -67,13 +67,10 @@
                 <a href="stats.html" class="github-button">View Statistics</a>
             </div>
 
-            <!-- Stats UI & charts (upload fallback + canvases for all charts) -->
+            <!-- Stats UI & charts (no URL input as requested) -->
             <div class="stats-main" style="margin-top:16px;">
                 <section class="data-controls">
-                    <div class="url-load">
-                        <input id="data-url" type="text" placeholder="Optional: paste JSON URL and press Load (CORS permitting)">
-                        <button id="load-url">Load URL</button>
-                    </div>
+                    <!-- URL input removed — site will auto-load local voc.json + data_without_voc.json -->
                     <div id="status" class="status" aria-live="polite"></div>
                 </section>
 
