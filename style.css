@@ -277,3 +277,65 @@ a:hover {
 }
 
 /* improved tooltip font size (Chart.js config handles content) */
+
+/* Chart container improvements */
+.chart-container {
+  background: linear-gradient(180deg,#ffffff,#fbfbfd);
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(30,40,60,0.06);
+  transition: transform .12s ease, box-shadow .12s ease;
+  min-height: 260px;
+  display:flex;
+  flex-direction:column;
+}
+.chart-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 34px rgba(30,40,60,0.09);
+}
+.chart-container h3 {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  color: #1f2a44;
+  font-weight: 600;
+}
+
+/* Make canvas occupy available area */
+.chart-container canvas {
+  width: 100% !important;
+  height: calc(100% - 34px) !important;
+  display:block;
+  border-radius:6px;
+  background: linear-gradient(0deg, rgba(255,255,255,0), rgba(255,255,255,0));
+}
+
+/* Summary table polish */
+#summary table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(20,30,60,0.04);
+}
+#summary th {
+  background: linear-gradient(90deg, #f7f9fc, #ffffff);
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+#summary td {
+  color: #24303f;
+  font-size: 0.95rem;
+}
+
+/* status area */
+.status {
+  color: #475569;
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+/* small responsive tweak */
+@media (max-width:900px) {
+  .charts { grid-template-columns: 1fr; }
+  .chart-container { min-height: 220px; }
+}
