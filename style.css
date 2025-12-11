@@ -222,49 +222,58 @@ a:hover {
 }
 
 .chart-card {
-    background: #fff;
-    border: 1px solid #eee;
-    padding: .75rem;
-    border-radius: 8px;
-    height: 300px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+  position: relative; /* allow overlays */
+  background: #fff;
+  border: 1px solid #eee;
+  padding: .75rem;
+  border-radius: 8px;
+  height: 360px; /* bigger charts */
+  display: flex;
+  flex-direction: column;
 }
 
-.chart-card h3 {
-    margin: 0 0 .5rem 0;
-    font-size: 1rem;
-}
-
+/* reduce canvas default margin so chart uses more area */
 .chart-card canvas {
-    width: 100%;
-    height: 100%;
-    flex: 1 1 auto;
+  width: 100%;
+  height: calc(100% - 42px); /* leave space for title+summary */
+  flex: 1 1 auto;
 }
 
-/* No data overlay for charts */
+/* numeric summary area under the chart */
+.chart-summary {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  border-top: 1px dashed #eee;
+  padding-top: 6px;
+  display: block;
+  text-align: center;
+}
+
+/* muted text style */
+.chart-card .muted {
+  color: #777;
+}
+
+/* empty overlay already added earlier; keep it readable */
 .chart-empty-overlay {
   position: absolute;
-  inset: 48px 12px 12px 12px; /* leave room for the title area */
+  inset: 48px 12px 48px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 8px;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   color: #666;
   font-size: 0.95rem;
   border-radius: 6px;
   pointer-events: none;
 }
 
-/* Fallback: hide legacy data-source notices if present */
-#data-sources,
-.data-sources,
-.datasources,
-.legacy-data-sources,
-.notice-data-sources,
-[data-note="data-sources"] {
-    display: none !important;
+/* legend tweaks for better spacing */
+.chart-card .legend {
+  font-size: 0.9rem;
 }
+
+/* improved tooltip font size (Chart.js config handles content) */
