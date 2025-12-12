@@ -17,7 +17,7 @@
             "nc10": 330.46,
             "typical_size": 0.57,
             "sgp40_raw": 31753,
-            "deviceId": "ESP32_01",
+            "deviceId": "ESP32_01", 
             "timestamp": "2025-12-10T14:32:05.915834+04:00"
         },
         {
